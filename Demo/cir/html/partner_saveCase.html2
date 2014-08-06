@@ -1,0 +1,163 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>案件编辑</title>
+    <link rel="Stylesheet" type="text/css" href="${page.domain}/admin?res=c3R5bGU=&amp;${os.version}.css" />
+    <link href="${page.domain}${os.ppath}/css.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <div id="caseform" class="caseform">
+        <ul style="height:20px;line-height: 20px;">
+            <li>案件编号：<span field="CaseNo">-</span></li>
+            <li>合同编号：<span field="ContractNo">-</span></li>
+            <li>案件时间：<span field="CreateTime">-</span></li>
+            <li style="display:none">供应商编号：<span field="PartnerCode">-</span></li>
+            <li style="display:none">财务编号：<span field="CashNo">-</span></li>
+        </ul>
+        <br />
+        <div class="clearfix"></div>
+
+        <table width="100%">
+            <tr>
+                <td style="width:140px;position: relative">
+                    【车况表】
+                </td>
+                <td style="position: relative">
+                    【现场照片】
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div id="imgs" class="imgs">
+                    </div>
+                </td>
+                <td>
+                    <div id="imgs2" class="imgs">
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="width:140px;position: relative">
+                    <span style="display:block;" id="upload"><input type="button" value="上传图片" class="btn" /></span>
+                </td>
+                <td style="position: relative">
+                    <span style="display:block;" id="upload2"><input type="button" value="上传图片" class="btn" /></span>
+                </td>
+            </tr>
+        </table>
+
+        <div style="text-align: center">
+            <br />
+            <input type="button" value="  提交  " disabled="disabled" class="btn" id="btn_save" style="padding:10px 30px;" />
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var caseform = 'caseform';
+
+        window.imgPanel = J.$('imgs');
+        window.imgUl =null;
+        window.imgIndex = 0;
+
+        window.imgPanel2 = J.$('imgs2');
+        window.imgUl2 = null;
+        window.imgIndex2 = 0;
+
+        window.btn_save = J.$('btn_save');
+        J.json.bind(caseform,${entity.json});
+
+        var galleryJson=${entity.galleryJson};
+
+        function createLi(imgPath) {
+            var li = document.createElement('LI');
+            li.innerHTML = '<img field="imgs['+(imgIndex++)+']" src="'+imgPath+'"/><br/><a href="javascript:;" onclick="removeImg(this)">删除</a>';
+            return li;
+        }
+        function createLi2(imgPath) {
+            var li = document.createElement('LI');
+            li.innerHTML = '<img field="imgs2['+(imgIndex2++)+']" src="'+imgPath+'"/><br/><a href="javascript:;" onclick="removeImg2(this)">删除</a>';
+            return li;
+        }
+        function removeImg(t) {
+            var node = t.parentNode;
+            imgUl.removeChild(node);
+            window.btn_save.removeAttribute('disabled');
+        }
+
+        function removeImg2(t) {
+            var node = t.parentNode;
+            imgUl2.removeChild(node);
+            window.btn_save.removeAttribute('disabled');
+        }
+
+        var upload = cms.upload({
+            id: 'upload',
+            url: 'upload?for=image&upload.id=upload',
+            exts: '*.jpg;*.jpeg;*.png'
+        }, function (path) {
+            if (!imgUl || confirm('确认要覆盖车况表吗？')) {
+                if (!imgUl) {
+                    imgUl = document.createElement('UL');
+                    imgPanel.innerHTML = '';
+                    imgPanel.appendChild(imgUl);
+                    imgUl.appendChild(createLi(path));
+                } else {
+                    imgPanel.getElementsByTagName('IMG')[0].src = path;
+                }
+                window.btn_save.removeAttribute('disabled');
+            }
+        });
+
+        var upload2 = cms.upload({
+            id: 'upload2',
+            url: 'upload?for=image&upload.id=upload2',
+            exts: '*.jpg;*.jpeg;*.png'
+        }, function (path) {
+            if (!imgUl2) {
+                imgUl2 = document.createElement('UL');
+                imgPanel2.innerHTML = '';
+                imgPanel2.appendChild(imgUl2);
+            }
+            imgUl2.appendChild(createLi2(path));
+            
+            window.btn_save.removeAttribute('disabled');
+        });
+
+        btn_save.onclick=function() {
+            var data = J.json.toObject(caseform);
+            if (!data.imgs)data.imgs = '';
+            if (!data.imgs2)data.imgs2 = '';
+            if (data.imgs =='' && data.imgs2 =='') {
+                alert('还未上传图片!');
+                return false;
+            }
+            J.xhr.jsonPost('partner_savecase', data, function(json) {
+                if (json.result) {
+                    alert('恭喜,录入完成!');
+                    location.reload();
+                } else {
+                    alert(json.message);
+                }
+            });
+        };
+
+        if (galleryJson) {
+            for (var i = 0; i < galleryJson.length; i++) {
+                if (galleryJson[i].imgType == 1) {
+                    imgUl = document.createElement('UL');
+                    imgPanel.innerHTML = '';
+                    imgPanel.appendChild(imgUl);
+                    imgUl.appendChild(createLi(galleryJson[i].imgUrl));
+                } else {
+                    if (!imgUl2) {
+                        imgUl2 = document.createElement('UL');
+                        imgPanel2.innerHTML = '';
+                        imgPanel2.appendChild(imgUl2);
+                    }
+                    imgUl2.appendChild(createLi2(galleryJson[i].imgUrl));
+                }
+            }
+        }
+    </script>
+</body>
+</html>

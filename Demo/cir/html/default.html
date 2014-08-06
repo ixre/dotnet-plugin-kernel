@@ -1,0 +1,66 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+    <script src="${os.fpath}/core.js"></script>
+</head>
+<body style="text-align:center">
+
+    <img src="${os.ppath}/apps/app_logo.png" style="width:50%" /><br /><br />
+    <input type="button" value="下载" onclick="download()" style="width:300px;height:60px" /><br />
+    <br />
+    下载次数:<span id="downcount">0</span>次
+
+
+    <script type="text/javascript">
+        var appResURI = {
+            apk: "${os.ppath}/apps/ferrariassist.apk",
+            wxApk: "http://a.app.qq.com/o/simple.jsp?pkgname=com.jinec.ferrariassist&g_f=994413",
+            ios: "http://store.apple.com/cn"
+        };
+
+
+        function download() {
+            addDownCount();
+            location.href = '/ferrariassist.apk';
+        }
+        function upDownCount() {
+            J.xhr.post('/poi/count/get', {}, function (d) {
+                J.$('downcount').innerHTML = d;
+            });
+        }
+
+        function addDownCount() {
+            J.xhr.post('/poi/count/add', {}, function (d) {
+                J.$('downcount').innerHTML = d;
+            });
+        }
+
+        upDownCount();
+
+        (function () {
+            //var userAgent = "Mozilla/5.0 (Linux; U; Android 2.3.7; en-us; Nexus One Build/FRF91) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1;";
+            //var userAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 6_1_3 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Mobile/10B329 MicroMessenger/5.0.1";
+
+            var userAgent = window.navigator.userAgent,
+            android = userAgent.match(/(Android)[\s\/]+([\d\.]+)/),
+            ios = userAgent.match(/(iPad|iPhone|iPod)\s+OS\s([\d_\.]+)/),
+            wp = userAgent.match(/(Windows\s+Phone)\s([\d\.]+)/),
+            isWx = /MicroMessenger/i.test(userAgent);
+
+            if (ios) {
+                addDownCount();
+                location.href = appResURI.ios;
+            } else if (android) {
+                addDownCount();
+                if (isWx) {
+                    location.href = appResURI.wxApk;
+                } else {
+                    location.href = appResURI.apk;
+                }
+            }
+
+        })();
+    </script>
+</body>
+</html>

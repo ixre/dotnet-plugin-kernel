@@ -1,0 +1,182 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>供应商数据录入</title>
+    <link rel="Stylesheet" type="text/css" href="${page.domain}/admin?res=c3R5bGU=&amp;${os.version}.css" />
+    <link href="${page.domain}${os.ppath}/css/css.css" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+        body{ font-size: 14px;}
+        .partner_ctrl .title {
+            background: #d91f05;
+            color: #ffffff;
+            line-height: 40px;
+            font-size: 18px;
+            font-family: '微软雅黑';
+            text-align: center;
+        }
+
+        .caseform ul {
+            margin: 0;
+            padding: 3px 10px;
+            background: #f0f0f0;
+        }
+
+            .caseform ul li {
+                float: left;
+                margin-right: 10px;
+            }
+
+        div.imgs {
+            border: solid 1px #ddd;
+            padding: 10px;
+            height: 120px;
+            overflow: auto;
+        }
+
+        .imgs ul, .imgs {
+            background: #ffffff;
+        }
+
+            .imgs img {
+                width: 100px;
+                height: 75px;
+            }
+
+            .imgs ul li {
+                text-align: center;
+            }
+        .ui-datagrid-view td{ text-align: center;line-height: 25px;}
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <div class="cent">
+            <div class="l1"></div>
+            <div class="l2"></div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="partner_ctrl">
+            <div class="title">案件搜索</div>
+            <div class="case_input">
+                <div class="form" id="search_form" style="width:280px;">
+                    <table cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td>供应商编码：</td>
+                            <td><input type="text" class="ui-validate1 tb_normal" field="s_partnerCode" required="true" tipin="tip_summary" style="width:120px" /></td>
+                        </tr>
+                    <tr>
+                        <td>财务编号：</td>
+                        <td><input type="text" onblur="document.getElementById('vimg').onclick();" class="ui-validate1 tb_normal" field="s_cashNo" required="true" tipin="tip_summary" style="width:120px" /></td>
+                    </tr>
+                    <tr>
+                        <td>验证码：</td>
+                        <td><input field="VerifyCode" class="ui-validate1 tb_normal" required="true" type="text" name="valiCode" style="width:60px" />
+<img class="inpImg" src="VerifyCode" onclick="this.src='VerifyCode?'+Math.random()" style="height:22px;" id="vimg" />&nbsp;&nbsp;
+
+<span id="tip_summary"></span></td>
+                    </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <span class="btn"><input type="button" id="btn_search" class="btn" value="查找案件" /></span>
+                            </td>
+                        </tr>
+                       </table>
+                </div>
+            </div>
+
+            <div style="padding-left:25px; border-top:solid 1px #ddd;padding-top:10px">
+                <strong>备注：</strong><br />
+                财务号填写时候去除第一位数字<br />
+                以下列表仅供24小时内查看<br /><br />
+            </div>
+            <div id="todayCase">
+                <div class="title">今日上传案件</div>
+                <div id="dg" class="today_case_list"></div>
+                <div class="pager"></div>
+            </div>
+
+        </div>
+
+        <div class="main">
+            <div class="tipbox" id="tipbox">请输入供应商编码和案件号进行案件新增.</div>
+            <div class="case_panel" id="case_panel"></div>
+
+        </div>
+        <div class="clearfix"></div>
+    </div>
+
+
+    <script type="text/javascript" src="${page.domain}/admin?res=c2NyaXB0&amp;${os.version}.js"></script>
+    <script type="text/javascript">
+
+        //加载数据
+        $JS.json.bind('search_form', {
+            s_partnerCode: $JS.cookie.read('partnerCode'),
+            s_cashNo: '',
+            VerifyCode:''
+        });
+
+        J.$('btn_search').onclick = function () {
+            var data = J.json.toObject('search_form');
+            if (data.s_caseNo == '' || data.s_partnerCode == '' || data.VerifyCode == '') {
+                alert('请填写完整!');
+                return false;
+            } else {
+                var rsb = J.$('tipbox');
+                var csp = J.$('case_panel');
+
+                rsb.className = 'tipbox';
+                csp.className = 'hidden';
+
+                rsb.innerHTML = '<span style="font-size:14px;font-weight:bold;color:green">搜索中...</span>';
+                J.xhr.jsonPost('partner_verifycase', data, function (json) {
+                    if (json.result) {
+                        $JS.cookie.write('partnerCode', data.s_partnerCode);
+                        rsb.className = 'hidden';
+                        csp.className = 'case_panel';
+                        J.loadHTML(csp, json.html);
+                    } else {
+                        if (json.message == '') {
+                            rsb.innerHTML = '<span style="color:red">供应商编号与合同号不匹配！</span>';
+                        } else if (json.message == 'exists') {
+                            rsb.innerHTML = '<span style="color:red">案件已经录入！</span>';
+                        } else {
+                            rsb.innerHTML = '<span style="color:red">' + json.message + '</span>';
+                        }
+                    }
+                });
+            }
+        };
+
+        var _dg = $JS.grid('dg', {
+            url: 'GetTodayUploadedCases',
+            data: { page: 1 },
+            idField: 'id',
+            columns: [
+                { field: 'CashNo', title: '财务编号', width: 100, formatter: null },
+                {
+                    field: '_Time', title: '时间', width: 0, formatter: function (val, row) {
+                        return val;
+                    return new Date(val).format("HH:mm");
+                } }
+            ],
+            loaded: function (data) {
+                if (data.rows) {
+                    //加载分页
+                    //this.panel.nextSibling.innerHTML = data.pager;
+                    if(/MSIE\s[6|7]/.test(window.navigator.userAgent)){
+                      this.panel.getElementsByTagName('DIV')[1].style.height = (data.rows.length * 30) + 'px';
+                    }
+                } else {
+                    this.panel.innerHTML = '<div style="color:red;text-align:center;line-height:50px;">今日没有上传的案件！</div>';
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

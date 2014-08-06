@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>供应商数据录入</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <link href="${page.domain}${os.ppath}/css/css_mobile.css" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+        .partner_ctrl .title {
+            background: #d91f05;
+            color: #ffffff;
+            line-height: 40px;
+            font-size: 18px;
+            font-family: '微软雅黑';
+            text-align: center;
+        }
+
+        .caseform ul {
+            margin: 0 0 10px 0;
+            padding: 3px 10px;
+            list-style: none;
+        }
+
+            .caseform ul li {
+                float: left;
+                margin-right: 10px;
+            }
+
+        div.imgs {
+            border: solid 1px #ddd;
+            padding: 10px;
+            height: 120px;
+            overflow: auto;
+        }
+
+        .imgs ul, .imgs {
+            background: #ffffff;
+        }
+
+            .imgs img {
+                width: 120px;
+                height: 100px;
+            }
+
+            .imgs ul li {
+                text-align: center;
+            }
+    </style>
+</head>
+<body>
+    <div class="page-header hidden">
+        <div class="cent">
+            <div class="l1"></div>
+            <div class="l2"></div>
+        </div>
+    </div>
+
+    <img src="${os.ppath}/css/header_mobile.gif" width="100%" />
+
+    <div class="container">
+
+        <div class="partner_ctrl">
+            <div class="title">案件搜索</div>
+            <div class="case_input">
+                <div class="form" id="search_form">
+                    <table cellpadding="0" cellspacing="0" width="100%">
+                        <tr>
+                            <td>供应商编码：</td>
+                            <td><input type="text" class="ui-validate1 tb_normal" field="s_partnerCode" required="true" tipin="tip_summary" style="width:120px" /></td>
+                        </tr>
+                    <tr>
+                        <td>财务编号：</td>
+                        <td><input type="text" class="ui-validate1 tb_normal" field="s_cashNo" required="true" tipin="tip_summary" style="width:120px" /></td>
+                    </tr>
+                    <tr>
+                        <td>验证码：</td>
+                        <td><input field="VerifyCode" class="ui-validate1 tb_normal" required="true" type="text" name="valiCode" style="width:60px" />
+<img class="inpImg" src="VerifyCode" onclick="this.src='VerifyCode?'+Math.random()" style="height:22px;" />&nbsp;&nbsp;
+
+<span id="tip_summary"></span></td>
+                    </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <span class="btn"><input type="button" id="btn_search" class="btn" value="查找案件" /></span>
+                            </td>
+                        </tr>
+                       </table>
+                </div>
+            </div>
+
+
+
+        </div>
+
+        <div class="main">
+            <div class="tipbox" id="tipbox">请输入供应商编码和案件号进行案件新增.</div>
+            <div class="case_panel" id="case_panel"></div>
+
+        </div>
+        <div class="clearfix"></div>
+    </div>
+
+    <script type="text/javascript" src="${page.domain}/admin?res=c2NyaXB0&amp;${os.version}.js"></script>
+    <script type="text/javascript">
+
+        // document.body.style.height = J.screen.height() + 'px';
+
+        J.$('btn_search').onclick = function () {
+            var data = J.json.toObject('search_form');
+            if (data.s_caseNo == '' || data.s_partnerCode == '' || data.VerifyCode == '') {
+                alert('请填写完整!');
+                return false;
+            } else {
+                var rsb = J.$('tipbox');
+                var csp = J.$('case_panel');
+
+                rsb.className = 'tipbox';
+                csp.className = 'hidden';
+
+                rsb.innerHTML = '<span style="font-size:14px;font-weight:bold;color:green">搜索中...</span>';
+                J.xhr.jsonPost('partner_verifycase', data, function (json) {
+                    if (json.result) {
+                        rsb.className = 'hidden';
+                        csp.className = 'case_panel';
+                        J.loadHTML(csp, json.html);
+                        return;
+                        rsb.innerHTML = '<center><a href="javascript:;" style="color:green;curor:point" id="btn_saveCase">案件已经找到，点击新建</a></center>';
+
+                        J.$('btn_saveCase').onclick = (function (html) {
+                            return function () {
+                                editCase(html);
+                            };
+                        })(json.html);
+                    } else {
+                        if (json.message == '') {
+                            rsb.innerHTML = '<span style="color:red">供应商编号与合同号不匹配！</span>';
+                        } else if (json.message == 'exists') {
+                            rsb.innerHTML = '<span style="color:red">案件已经录入！</span>';
+                        } else {
+                            rsb.innerHTML = '<span style="color:red">' + json.message + '</span>';
+                        }
+                    }
+                });
+            }
+        };
+
+
+
+        function x() {
+            J.xhr.jsonPost('', { file: J.$('file').value }, function (json) {
+                if (json.result) {
+                    window.parent.location.reload();
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
