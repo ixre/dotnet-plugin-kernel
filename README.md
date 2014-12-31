@@ -7,4 +7,17 @@
 
 应用案例：http://github.com/newmin/cms
 
+## 如何使用？ ##
+
+### 1.创建插件宿主
+
+  实现接口：IPluginHost
+
+### 2. 编写部署插件    编写插件，并放于指定的目录（默认plugins下)，插件需实现IPlugin接口
+
+### 3. 连接插件:
+
+  IPluginHost.Connect()
+  
+  
 ![截图](https://raw.githubusercontent.com/newmin/ntpk/master/snapshot1.png)
